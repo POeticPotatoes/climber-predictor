@@ -6,7 +6,7 @@ h2{ text-align:center; }
 
 Rock climbing is a popular sport that involves participants scaling natural rock formations or artifical rock walls. Each formation has a rated difficulty, and participants may push themselves to complete climbs of increasing difficulty.
 
-In this project, we intend to train models that are able to predict the maximum grade (maximum difficulty) successfully scaled by a rock climber based on various variables.
+In this project, we intend to train regression models that are able to predict the maximum grade (maximum difficulty) successfully scaled by a rock climber based on various variables.
 
 ## Table of Contents
 * [Data Acquisition](#data-acquisition)
@@ -198,7 +198,7 @@ In our original problem statement, `days_diff` and `days_cl` both describe a fut
 ### Outliers
 
 Having added relevant predictors to our model, we can now remove outliers for our variables:
-1. As mentioned earlier, some values of `start_age` are completely infeasible as they are below or equal to 0.
+1. As mentioned earlier, some values of `start_age` are completely infeasible as they are below or equal to 0. This is possibly due to individuals reporting their age at the time of their first climb instead of their current age.
 2. As mentioned earlier, some values of `days_diff` appear erroneous as they are significantly larger than the `years_cl` variable.
 3. `continent` contains an additional "Other" value that is mapped to the highest numerical value. It is uncertain what this "Other" column might represent.
 
@@ -223,8 +223,49 @@ With these changes, we can build a final correlation heatmap and scatterplot to 
 ## Machine Learning
 In this section, we do an initial linear regression, and subsequently use it to find optimal exponents for our variables. Next, we normalise our data and use them ot train K-Nearest-Neighbours and Support Vector Machine models.
 * [Linear Regression](#linear-regression)
-* [K-Nearest-Neighbours (KNN)](#k-nearest-neighbours)
 * [Support Vector Machine (SVM)](#support-vector-machine)
+* [K-Nearest-Neighbours (KNN)](#k-nearest-neighbours)
 
 ### Linear Regression
-Our base linear regression provides us with an explained variance of 
+Performing linear regression on the current variables gives an R^2 value of 0.71, and an MSE of 26.
+
+<img src="photos/raw_linear.png" style="width:100%;"><br>
+
+We can also observe that there is a slight curvature in both the graph of the training set and testing set, where there are more data points below the line of best fit.
+
+This implies that the Linear Regression Model fails to account for the non-linearity of provided features, and exponents may be applied to improve this behaviour.
+
+#### Hypertuning Parameters
+To improve the linear regression, we can explore the effect of varying exponents on each variable. Plotting explained variance against exponent for different features provides us with interesting results:
+
+<img src="photos/bmi_exponent.png" style="width:49%;">
+<img src="photos/height_exponent.png" style="width:50%;">
+
+> Resulting curves for BMI and Height respectively
+
+We can observe visually that there exists an optimal value for exponent that maximises the accuracy of our model. Obtaining these values for all of our predictors gives a list of exponents that can be applied to our variables.
+
+> It is important to normalise the data to unit variance for this step as applying exponents can cause a variable to become overpower the linear regression model.
+
+Another observation is that this method of exponent-finding does not work well on categorical variables such as sex and continent:
+
+<img src="photos/sex_exponent.png" style="width:51%;">
+<img src="photos/continent_exponent.png" style="width:48%;"><br>
+
+Hence, we intentionally restore the exponents of these features back to 1.
+
+<img src="photos/fixed_exponent.png">
+
+Applying our obtained exponent values, renormalising and performing linear regression provides us with a significantly improved model:
+
+<img src="photos/tuned_linear.png"><br>
+
+The distribution of values are visibly more linear than our previous regression, suggesting that the features are more accurately represented with the exponents applied.
+
+These parameters are reused for subsequent SVM and KNN models.
+
+### Support Vector Machine
+
+We can apply SVM with a linear kernel on our tuned dataset to achieve a significantly more accurate model:
+
+<img src="photos/svm.png"><br>
