@@ -1,14 +1,11 @@
-<style>
-h1{ text-align:center; }
-h2{ text-align:center; }
-</style>
-# Climb Dataset
+<h1 align=center>Climb Dataset</h1>
 
 Rock climbing is a popular sport that involves participants scaling natural rock formations or artifical rock walls. Each formation has a rated difficulty, and participants may push themselves to complete climbs of increasing difficulty.
 
 In this project, we intend to train regression models that are able to predict the maximum grade (maximum difficulty) successfully scaled by a rock climber based on various variables.
 
-## Table of Contents
+<h2 align=center>Table of Contents</h2>
+
 * [Data Acquisition](#data-acquisition)
 * [Problem Formulation](#problem-statement)
 * [Exploratory Analysis & Data Cleaning](#exploratory-analysis-and-data-cleaning)
@@ -19,7 +16,7 @@ In this project, we intend to train regression models that are able to predict t
 * [Conclusions](#conclusions)
 * [Considerations](#considerations)
 
-## Data Acquisition
+<h2 align=center> Data Acquisition</h2>
 The dataset we will be using for this project is the <a href="https://www.kaggle.com/datasets/jordizar/climb-dataset" target="_blank">Climb Dataset</a> provided by Jordi Zaragoza which provides us with data from individual rock climbers across multiple countries and age groups.
 
 The main dataset, `climber_df.csv` provides us with 10927 rows and 16 columns of data:
@@ -29,7 +26,7 @@ Column|user_id|country|sex|height|weight|age|years_cl|date_first|year_first|grad
 Type|-| Categorical |Categorical |Numerical  |Numerical  |Numerical  |Numerical  |Date       |Numerical  |Numerical  |Date       |Numerical  |Numerical  |Numerical  |Numerical  |Numerical  
 Description|-|Country of the user |Biological sex |Height in cm |Weight in kg |Age (in integer years) |"Years climbing" |Date of first recorded climb |Integer year of first recorded climb |Grade of first recorded climb |Date of last recorded climb |Integer year of last recorded climb |Grade of last recorded climb |Number of reported grades |Mean grade of recorded climbs |Highest grade of recorded climbs
 
-### Grade Description
+<h2 align=center>Grade Description</h2>
 There are 2 main conventions for rating climb difficulty, the Fontainebleau Scale and the V-scale.
 
 |grade_id|Fontainebleau Scale|V-scale|
@@ -41,7 +38,7 @@ There are 2 main conventions for rating climb difficulty, the Fontainebleau Scal
 
 Notably, grade values are sorted based on difficulty, hence we are able to perform scalar predictions on variables that are mapped to `grade_id`.
 
-## Problem Statement
+<h2 align=center> Problem Statement</h2>
 
 <h4 style="text-align:center;"> Given the <ins>initial state</ins> of a rock climber, we wish to predict the <ins>highest difficulty</ins> that they will achieve in <ins>the future</ins>.</h4>
 
@@ -75,7 +72,7 @@ Notably, grade values are sorted based on difficulty, hence we are able to perfo
 
 <br>
 
-## Exploratory Analysis and Data Cleaning
+<h2 align=center>Exploratory Analysis and Data Cleaning</h2>
 In this section, we perform exploratory analysis on key variables and create new variables to represent combinations of related features.
 
 * [Initial Correlation](#initial-correlation)
@@ -220,7 +217,7 @@ With these changes, we can build a final correlation heatmap and scatterplot to 
 <img src="photos/final_heatmap.png" style="width:100%;"><br>
 <img src="photos/scatter.png" style="width:100%;"><br>
 
-## Machine Learning
+<h2 align=center>Machine Learning</h2>
 In this section, we do an initial linear regression, and subsequently use it to find optimal exponents for our variables. Next, we normalise our data and use them ot train K-Nearest-Neighbours and Support Vector Machine models.
 * [Linear Regression](#linear-regression)
 * [Support Vector Machine (SVM)](#support-vector-machine)
