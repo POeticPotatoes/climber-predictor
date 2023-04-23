@@ -1,22 +1,30 @@
-<h1 align=center>Climb Dataset</h1>
+<h1 align=center>Climbing Prediction Model</h1>
 
-Rock climbing is a popular sport that involves participants scaling natural rock formations or artifical rock walls. Each formation has a rated difficulty, and participants may push themselves to complete climbs of increasing difficulty.
+![cover image](photos/cover_image.jpeg)
 
-In this project, we intend to train regression models that are able to predict the maximum grade (maximum difficulty) successfully scaled by a rock climber based on various variables.
+Rock climbing is becoming a more popular sport, with participation in rock climbing steadily increasing every year. Each formation has a rated difficulty, and participants may push themselves to complete climbs of increasing difficulty. 
 
-<h2 align=center>Table of Contents</h2>
+As climbing hobbyists ourselves, we wanted to build a tool that allows new climbers to project their future success and plan their training frequencies and schedules.
+
+In this project, we train regression models that are able to predict the maximum grade (maximum difficulty) successfully scaled by a rock climber based on various variables, and conclude with a hybrid model which achieves a higher accuracy than previously used models.
+
+> This README provides a brief overview of our project. Our python notebook is annotated in greater detail and explains our thought processes in greater clarity for some of our steps.
+
+## Technologies
+* Language: Python with Jupyter Notebook
+* Libraries: Numpy, Seaborn, Matplotlib, Sklearn, Scipy
+* Machine Learning Models: Logistic Regression, SVM, KNN
+* Data Source: <a href="https://kaggle.com">Kaggle.com</a>
+
+## Table of Contents
 
 * [Data Acquisition](#data-acquisition)
 * [Problem Formulation](#problem-statement)
 * [Exploratory Analysis & Data Cleaning](#exploratory-analysis-and-data-cleaning)
 * [Machine Learning](#machine-learning)
-    * [Linear Regression](#linear-regression)
-    * [K Nearest Neighbours (KNN)](#k-nearest-neighbours)
-    * [Support Vector Machines (SVM)](#support-vector-machines)
-* [Conclusions](#conclusions)
-* [Considerations](#considerations)
+* [Limitations](#limitations)
 
-<h2 align=center> Data Acquisition</h2>
+## Data Acquisition
 The dataset we will be using for this project is the <a href="https://www.kaggle.com/datasets/jordizar/climb-dataset" target="_blank">Climb Dataset</a> provided by Jordi Zaragoza which provides us with data from individual rock climbers across multiple countries and age groups.
 
 The main dataset, `climber_df.csv` provides us with 10927 rows and 16 columns of data:
@@ -26,7 +34,7 @@ Column|user_id|country|sex|height|weight|age|years_cl|date_first|year_first|grad
 Type|-| Categorical |Categorical |Numerical  |Numerical  |Numerical  |Numerical  |Date       |Numerical  |Numerical  |Date       |Numerical  |Numerical  |Numerical  |Numerical  |Numerical  
 Description|-|Country of the user |Biological sex |Height in cm |Weight in kg |Age (in integer years) |"Years climbing" |Date of first recorded climb |Integer year of first recorded climb |Grade of first recorded climb |Date of last recorded climb |Integer year of last recorded climb |Grade of last recorded climb |Number of reported grades |Mean grade of recorded climbs |Highest grade of recorded climbs
 
-<h2 align=center>Grade Description</h2>
+### Grade Description
 There are 2 main conventions for rating climb difficulty, the Fontainebleau Scale and the V-scale.
 
 |grade_id|Fontainebleau Scale|V-scale|
@@ -38,7 +46,7 @@ There are 2 main conventions for rating climb difficulty, the Fontainebleau Scal
 
 Notably, grade values are sorted based on difficulty, hence we are able to perform scalar predictions on variables that are mapped to `grade_id`.
 
-<h2 align=center> Problem Statement</h2>
+## Problem Statement
 
 <h4 style="text-align:center;"> Given the <ins>initial state</ins> of a rock climber, we wish to predict the <ins>highest difficulty</ins> that they will achieve in <ins>the future</ins>.</h4>
 
@@ -72,31 +80,18 @@ Notably, grade values are sorted based on difficulty, hence we are able to perfo
 
 <br>
 
-<h2 align=center>Exploratory Analysis and Data Cleaning</h2>
-In this section, we perform exploratory analysis on key variables and create new variables to represent combinations of related features.
+## Exploratory Analysis and Data Cleaning
+We performed exploratory analysis on key variables and create new variables to represent combinations of related features.
 
-* [Initial Correlation](#initial-correlation)
+This README presents a brief overview of changes we have made on the dataset; Further explanation and details may be found in the actual notebook.
+
 * [Grades](#grades)
 * [Country](#country)
-* [Biometric Data](#biometric-data)
+* [Height and Weight](#height-and-weight)
 * [Climbing Durations](#climbing-durations)
+* [Age](#age)
 * [Outliers](#Outliers)
 * [Final Correlation](#final-correlation)
-
-### Initial Correlation
-
-A preliminary check of the correlations between values of the dataset results in the following heatmap:
-
-![Initial Correlation Heatmap](photos/initial_correlation.png)
-
-We observe a few expected correlations:
-* `height` and `weight` are closely correlated, and gender is inversely correlated to both due to females being generally shorter and lighter than males
-* `age` and `years_cl` are directly correlated, since years spent climbing is upper bounded by the age of the individual  
-* It is also interesting to note that `grades_first` is highly correlated to `grades_max`. This could be due several reasons:
-    * Having a higher first grade is a strong indicator of confidence and one is thus likely to attempt climbs of higher difficulty
-    * Some individuals could have climbed very few times, thus their first grade climbed is equal or close to their maximum grade achieved.
-
-The correlation between `grades_max` and our other discussed variables is generally low, and they must be improved to achieve useful results.
 
 ### Grades
 
@@ -107,162 +102,147 @@ Our dataset provides 4 main grade variables:
 * `grades_mean`
 * `grades_max`, our response variable
 
-It would be unfair to include `grades_mean` and `grades_last` into our predictor variables as **these variables are not known at the time of prediction**, which assumes that a climber has only completed their first climb.
-
-<br>
-
-We also find that `grades_max` is relatively well distributed and generally follows a normal distribution:
-1. The lowest grade has a `grade_id` of 29, which is a difficulty of 5 on the Fontainebleau Scale, which translates to a relatively easy climb for beginners.
-3. The average grade has a `grade_id` of 56, which is a difficulty of 7b+/7c on the Fontainebleau Scale and translates to a challenging climb, even for avid climbers
-2. The highest grade has a `grade_id` of 77, which is a 9b on the Fontainebleau Scale and well within the difficulty range of professional climbers
-
-![Distribution of grades_max](photos/grades_max.png)
+We discarded  `grades_mean` and `grades_last` as **these variables are not known at the time of prediction**, which assumes that a climber has only completed their first climb.
 
 ### Country
-First, we observe that:
-1. Data for this column is categorical and is stored as 26 unique unordered 3-character strings (eg. ESP, POL)
-2. Most data is collected from Europe
-3. There is a substantial difference in median, upper and lower quartiles of `grades_max` between countries in which could be useful
-4. Grouping data by continent also reflects significant differences in distribution of `grades_max`
-
-<img src="photos/country_distribution.png" style="width:48%;">
-<img src="photos/continent_distribution.png" style="width:51%;">
+We found that the interquartile range of climbers varied significantly between countries. However, the feature was represented by unordered 3-character strings, and many countries originated from the EU.
 
 ![Boxplots by country](photos/country_boxplot.png)
 
-In the case of Finalnd and the Czech Republic, the number of data points is extremely small which suggests that directly training our model on this country data could put the model at risk of overfitting.
+**In order to generalise our model**, we performed the following steps:
+1. Disregarded the individual countries and grouped them by continent
+1. Re-encoded countries as integers, sorted by mean
 
-Additionally, **we wish to generalise our model such that it is applicable to as many rock climbers as possible**. If our model was directly trained on these countries, it would be inapplicable to climbers who reside in countries outside of our dataset. 
-
-Therefore, we perform the following steps:
-1. Disregard the individual countries and group them by continent
-1. Re-encode countries as integers
-2. The order of encoding is based on some indicator (mean, upper quartile, lower quartile, median)
-
-Grouping by continent, every continent has sufficient data to form a normal distribution (by the Central Limit Theorem). Hence this grouping is sufficient.
-
-We select **mean** as the most representative indicator due to its highest correlation, and map continents to numerical values.
+Grouping by continent, every continent had sufficient data to form a normal distribution (by the Central Limit Theorem), and the disparity in interquartile ranges was still preserved.
 
 ![Remapped countries](photos/continent_remap.png)
 
-### Biometric Data
-We are provided 3 variables representing biometric data: `height`, `weight` and `age`.
-
-First, we observe that:
-1. Data is scalar and stored as integers for all 3 variables
-2. Plotting their distributions give relatively balanced normal distributions:
-  * The distribution of weight is slightly odd, but still follows a bell-curve shape. The 'wavelike' shape of its distribution could be from rounding errors when reporting the weight of each climber
-3. Running a correlation heatmap gives us relatively low correlation to all 3 variables
-
 ### Height and Weight
-As suggested by the initial correlation heatmap, height and weight are closely related features. In fact, we can use both variables to obtain Body Mass Indicator (BMI) as such:
+We used height and weight to obtain Body Mass Indicator (BMI) as such:
 
 $BMI = \frac{weight/kg}{[height/m]^2}$
 
 ![Bmi Distribution and Correlation](photos/bmi.png)
 
-We see that the correlation of `bmi` with `grades_max` has improved from the original height and weight correlation, suggesting that BMI is a useful transformation on the raw values of height and weight.
+We found that the correlation of `bmi` with `grades_max` improved from the original height and weight correlation, suggesting that BMI was a useful transformation on the raw values of height and weight.
+
+### Climbing Durations
+`years_cl` was described by the dataset author as the number of "years climbing". However, this information was ambiguous: "Years climbing" could have referred to the number of years spent climbing regulary, or the number of years since their first climb 
+
+We converted `years_cl` to `days_cl` with the approximation: $days\_climbed = years\_climbed*365$ Taking the difference between `date_first` and `date_last` (We name this variable `days_diff`) allowed us to obtain another measure of days spent climbing which had a vastly different distribution from `years_cl`.
+
+<img src="photos/years_cl.png" style="width:100%;"><br>
+
+It was noticed that `date_first` and `date_last` were sometimes reversed, so an abs() function was performed to fix this issue. Additionally, some values of `days_diff` were larger than `years_cl` despite the fact that `days_diff` should have been upper bounded by `years_cl`.
+
+`days_diff` had a significantly higher correlation to our response variable, so we chose to discard `years_cl` and use `days_diff` instead.
 
 ### Age
-It is observed that the correlation of `age` is extremely low. 
+The initial correlation of `age` was extremely low. 
 
-**Asssuming that `years_cl` represents the number of years since an individual has started climbing**, subtracting `years_cl` can give us the age that an individual started climbing.
+We subtracted `years_cl` from `age` **with the asssumption that `years_cl` represents the number of years since an individual has started climbing**, hence obtaining `start_age`, the starting age of the climbers.
 
 $start\_age = age-years\_cl$
 
 <img src="photos/age.png" style="width:100%;"><br>
 
-This allows us to obtain `start_age` which follows a normal distribution, and also has a significant correlation to `grades_max`. `start_age` also reveals that some values of `years_cl` are infeasible as they are larger than current reported age. This suggests **there is erroneous data that must be removed later**.
-
-### Climbing Durations
-`years_cl` is described by the dataset author as the number of "years climbing". However, this information is insufficient:
-1. "Years climbing" may refer to the number of years spent climbing regulary, or the number of years since the first climb (The climber may no longer be active). It is assumed when calculating `start_age` that it refers to the latter.
-2. We can convert `years_cl` to `days_cl` with the approximation: $days\_climbed = years\_climbed*365$
-3. Taking the difference between `date_first` and `date_last` (We name this variable `days_diff`) gives another measure of days spent climbing which has a vastly different distribution from `years_cl`.
-4. We can also obtain the frequency that the climber did climbs while he was active using the formula:  
-   $frequency=\frac{grades\_count}{number\_of\_days}$
-
-
-<img src="photos/years_cl.png" style="width:100%;"><br>
-
-It was noticed that `date_first` and `date_last` are sometimes reversed, so an abs() function was performed to fix this issue. Additionally, some values of `days_diff` are larger than `years_cl` which suggests **there is erroneous data that must be removed later**.
-
-* `days_diff` has a far stronger correlation to `grades_max` than `days_cl`
-* Both versions of frequency have a lower correlation to `grades_max` than their original variables
-
-In our original problem statement, `days_diff` and `days_cl` both describe a future state and are hence mutually exclusive variables. **Therefore, we will use `days_diff` instead of `years_cl` for subsequent model training.**
+This variable followed a normal distribution, and also had a significant correlation to `grades_max`. `start_age` also revealed that some values of `age` could be erroneous are infeasible as they led to negative starting ages. This is likely because `years_cl` contains erroneous data:
+1. Individuals might have reported the age that they started climbing instead of their current age
+2. Data could have been incorrectly recorded
 
 ### Outliers
 
-Having added relevant predictors to our model, we can now remove outliers for our variables:
-1. As mentioned earlier, some values of `start_age` are completely infeasible as they are below or equal to 0. This is possibly due to individuals reporting their age at the time of their first climb instead of their current age.
-2. As mentioned earlier, some values of `days_diff` appear erroneous as they are significantly larger than the `years_cl` variable.
-3. `continent` contains an additional "Other" value that is mapped to the highest numerical value. It is uncertain what this "Other" column might represent.
+* We observed significant skew for certain features `grades_count` and `days_diff`, which suggested that later applying a logarithmic transformation to those features would better normalise its data.
 
-These anomalies must be removed from the data as it is unclear how they should be otherwise interpreted.
+We identified the following outliers in our features:
+1. As mentioned earlier, some values of `start_age` were completely infeasible as they were below or equal to 0.
+2. As mentioned earlier, some values of `days_diff` appeared erroneous as they were significantly larger than the `years_cl` variable.
+3. The `continent` feature contains an additional "Other" value that was mapped to the highest numerical value. It was uncertain what this "Other" column represented.
+
+These anomalies were removed as it was unclear how to interpret their data.
 
 <img src="photos/outliers.png" style="width:100%;"><br>
 
-> We remove any `start_age` less than 4 as it is nearly physically impossible to start climbing at those ages
+Although other outliers for other features were present, it is likely that they are true outliers:
+* Outliers in biometric data appear feasible and could provide our model with useful datapoints for extreme body types
+* Rock climbing is a competitive sport and professionals can train multiple times a week and complete multiple climbs a day. Additionally, the aforementioned right skew for `grades_count` and `days_diff` distributions meant that applying the IQR outlier metrics to its data could have been unsuitable.
 
-### Correlation Heatmap
+### Summary
 A final review of our changes to the dataset:
-* `grades_last` and `grades_mean` are alternative response variables and will not be used
-* `country` has been generalised to `continent`
-* `bmi`, `start_age` and `days_diff` have been added
-* Erroneous data has been removed
+* `grades_last` and `grades_mean` were alternative response variables and would not be used
+* `country` was generalised to `continent`
+* `bmi`, `start_age` and `days_diff` were added
+* Erroneous data was removed
 
-With these changes, we can build a final correlation heatmap and scatterplot to visualise our features' correlation to `grades_max`.
-
-<img src="photos/final_heatmap.png" style="width:100%;"><br>
-<img src="photos/scatter.png" style="width:100%;"><br>
-
-<h2 align=center>Machine Learning</h2>
-In this section, we do an initial linear regression, and subsequently use it to find optimal exponents for our variables. Next, we normalise our data and use them ot train K-Nearest-Neighbours and Support Vector Machine models.
+## Machine Learning
+We performed an initial linear regression, and used it to hypertune exponents for our features. Next, we used these exponents to train Support Vector Machine and K-Nearest Neighbour models, and compared their results
 * [Linear Regression](#linear-regression)
 * [Support Vector Machine (SVM)](#support-vector-machine)
 * [K-Nearest-Neighbours (KNN)](#k-nearest-neighbours)
-
+* [Hybrid Model](#hybrid-model)
 ### Linear Regression
 Performing linear regression on the current variables gives an R^2 value of 0.71, and an MSE of 26.
 
 <img src="photos/raw_linear.png" style="width:100%;"><br>
 
-We can also observe that there is a slight curvature in both the graph of the training set and testing set, where there are more data points below the line of best fit.
+We observed that a slight curvature in both graphs, which confirmed that the Linear Regression Model did not account for the non-linearity of provided features.
 
-This implies that the Linear Regression Model fails to account for the non-linearity of provided features, and exponents may be applied to improve this behaviour.
+Hence, we had to obtain suitable transformations for our variables to linearize their relationships.
 
 #### Hypertuning Parameters
-To improve the linear regression, we can explore the effect of varying exponents on each variable. Plotting explained variance against exponent for different features provides us with interesting results:
+To improve the linear regression, we plotted explained variance against varying exponent transformations for individual features:
 
-<img src="photos/bmi_exponent.png" style="width:49%;">
-<img src="photos/height_exponent.png" style="width:50%;">
+<img src="photos/bmi_exponent.png" style="width:40%;">
+<img src="photos/height_exponent.png" style="width:42%;">
 
 > Resulting curves for BMI and Height respectively
 
-We can observe visually that there exists an optimal value for exponent that maximises the accuracy of our model. Obtaining these values for all of our predictors gives a list of exponents that can be applied to our variables.
+We used these curves to obtain an optimal value for exponent that would maximise the accuracy of our model. Obtaining these values for all of our predictors gave a list of exponents that could be applied to our variables.
 
-> It is important to normalise the data to unit variance for this step as applying exponents can cause a variable to become overpower the linear regression model.
+We observed that:
+1. Exponents for `days_diff` and `grades_count` were logarithmic and strongly reflected our initial observations about their skew
+2. `grades_first` had an exponent close to 1. This was expected as it was graded on the same scale as `grades_max`.
+3. This method of exponent-finding did not work well on categorical variables such as sex and continent, and we hence restored the exponents of these features back to 1.
 
-Another observation is that this method of exponent-finding does not work well on categorical variables such as sex and continent:
-
-<img src="photos/sex_exponent.png" style="width:51%;">
-<img src="photos/continent_exponent.png" style="width:48%;"><br>
-
-Hence, we intentionally restore the exponents of these features back to 1.
-
-<img src="photos/fixed_exponent.png">
-
-Applying our obtained exponent values, renormalising and performing linear regression provides us with a significantly improved model:
+Applying our obtained exponent values, renormalising and performing linear regression significantly improved our model:
 
 <img src="photos/tuned_linear.png"><br>
 
-The distribution of values are visibly more linear than our previous regression, suggesting that the features are more accurately represented with the exponents applied.
+* The distribution of values were visibly more linear than our previous regression
+* The logistic regression still appeared to be poor in predicting `grades_max` in the range of 30-40, with most data points falling above the optimal line. 
+* The model appeared prone to underestimating `grades_max` values in the intermediate range as well.
 
-These parameters are reused for subsequent SVM and KNN models.
+The exponents obtained in this step were reused for subsequent SVM and KNN models.
 
 ### Support Vector Machine
 
-We can apply SVM with a linear kernel on our tuned dataset to achieve a significantly more accurate model:
+We used the Linear SVM model (which does not utilise the kernel trick) as it is suitable for larger datasets with fewer features.
 
-<img src="photos/svm.png"><br>
+* The R^2 and MSE values of our model had noticeably improved from our logistic regression. 
+* The model appeared to outperform logistic regression in the midrange values for `grades_max`
+
+### K-Nearest Neighbours
+* KNN gave us the best R^2 and MSE values among the three models trained
+* However, the model appeared to be poor at predicting low and high values of `grades_max`. This was likely due to KNN relying on neighbouring data points to predict values: Extreme values of `grades_max` likely corresponded to data outside of the interquartile range that are sparse by nature
+
+### Hybrid Model
+To summarise our findings from the previous section:
+1. Linear Regression provided us with suitable transformations for our variables
+2. SVM was more accurate than Logistic Regression
+3. KNN was the most accurate model for standard datapoints but failed to accurately predict datapoints outside of the interquartile range
+
+Hence, we decided to build a hybrid model of SVM and KNN:
+1. SVM is the most accurate model for extreme datapoints, therefore we apply it first to identify those points
+2. The KNN model is then applied to the remaining datapoints to provide a more accurate prediction for those datapoints
+
+Doing so rewarded us with our most accurate model that achieved an expained variance (R^2) of 82.4%
+
+## Limitations
+
+We can explain the remaining variance in our final model in several ways:
+1. It is unclear when the biometric data of each individual is taken. Young climbers may increase in height over time, and inactive climbers may gain weight, which could explain the low correlations between `grades_max` and biometrics.
+2. `days_diff` and `grades_count` only guarantee training duration and frequency, but do not guarantee intensity. Climbers who actively challenge themselves to more difficult climbs might outperform their peers which would not be reflected by our current metrics.
+3. Our dataset concerns outdoor climbers, and may not consider the frequency of indoor trainings that might influence the future performance of a climber.
+4. In our outlier removal step, we observed a discrepancy in reporting of `age` and `years_cl` which was addressed by filtering out individuals who had infeasibly low starting ages (<=3 years old), but this may not have removed all erroneous data. This is likely, considering the skew in `start_age` which is a variable one would expect a normal distribution on.
+
+Additionally, it is surprising that KNN outperforms SVM when predicting values within the interquartile range. This project demonstrates the feasibility and relevance of basic models even with the introduction of newer models like SVM and neural networks.
